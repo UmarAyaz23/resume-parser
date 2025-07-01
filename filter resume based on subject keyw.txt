@@ -1,0 +1,5 @@
+filter resume based on subject keywords
+fetch CVs from mailbox
+extract text from CVs, use Grok Cloud
+create a profile of the candidates
+streamlit

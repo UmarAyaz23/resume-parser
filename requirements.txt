@@ -1,0 +1,7 @@
+streamlit
+pandas
+imapclient
+pdfplumber
+pyzmail36
+dotenv
+groq
