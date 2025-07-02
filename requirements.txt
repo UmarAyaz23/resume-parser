@@ -5,3 +5,4 @@ pdfplumber
 pyzmail36
 dotenv
 groq
+plotly.express
