@@ -45,7 +45,7 @@ def extract_content_with_LLM(text, timeout = 15):
         "Email": "john@example.com",
         "Phone Number": "123-456-7890",
         "Skills": "Python, Java, SQL",
-        "Education": "BS Computer Science - XYZ University, From Year to Year",
+        "Education": "BS Computer Science - XYZ University, Start Year - End Year",
         "Total Experience": "3",
         "Last Company": "ABC Corp",
         "Last Designation": "Software Engineer"
@@ -242,6 +242,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 left, center, right = st.columns([1, 6, 1])
+leftInner, rightInner = st.columns([1, 1])
 
 with center:
     st.title("AI Resume Parser")
@@ -298,14 +299,14 @@ with center:
         df = st.session_state.resumes_df.copy()
 
 
-        #---------------PIE CHART: SKILS---------------
+        #---------------PIE CHART: SKILLS---------------
         skill_counter = Counter()
         for skills in df['Skills'].dropna():
             for skill in map(str.strip, skills.split(',')):
                 skill_counter[skill.lower()] += 1
         
         top_skills_df = pd.DataFrame(skill_counter.items(), columns = ['Skill', 'Count']).sort_values(by = 'Count', ascending = False).head(10)
-        st.plotly_chart(px.pie(top_skills_df, names = "Skill", values = "Count", title = "Top 10 Skills", height = 500))
+        st.plotly_chart(px.pie(top_skills_df, names = "Skill", values = "Count", title = "Top 10 Skills", height = 500, color_discrete_sequence = px.colors.qualitative.Pastel1))
 
 
         #---------------BAR CHART: EDUCATION---------------
@@ -327,7 +328,7 @@ with center:
             y="Semesters Completed",
             hover_data=["University"],
             color="Semesters Completed",
-            color_continuous_scale = "reds",
+            color_continuous_scale = px.colors.sequential.Blues,
             title="Education Progress by Semester",
             labels={"Semesters Completed": "Semesters Completed"},
             height = 500
@@ -336,10 +337,147 @@ with center:
         st.plotly_chart(fig)
 
 
+        #--------------- DEGREE DISTRIBUTION BAR CHART ---------------
+        degree_keywords = {
+            "computer science": "Computer Science",
+            "cs": "Computer Science",
+            "artificial intelligence": "Artificial Intelligence",
+            "ai": "Artificial Intelligence",
+            "software engineering": "Software Engineering",
+            "se": "Software Engineering",
+            "data science": "Data Science",
+            "ds": "Data Science",
+            "information technology": "Information Technology",
+            "it": "Information Technology",
+            "cyber security": "Cybersecurity",
+            "cybersecurity": "Cybersecurity",
+            "bba": "Business Administration",
+            "mba": "Business Administration"
+        }
+
+        def normalize_degree(edu_str):
+            if pd.isna(edu_str):
+                return "Unknown"
+            
+            edu_str = edu_str.lower()
+            for keyword, label in degree_keywords.items():
+                if keyword in edu_str:
+                    return label
+            return "Other"
+
+        # Normalize degrees from Education column
+        df['Degree Type'] = df['Education'].apply(normalize_degree)
+
+        # Count degree frequencies
+        degree_counts = df['Degree Type'].value_counts().reset_index()
+        degree_counts.columns = ['Degree', 'Count']
+
+        # Plot degree bar chart
+        fig_degree = px.bar(
+            degree_counts,
+            x='Degree',
+            y='Count',
+            color = 'Degree',
+            title='Distribution of Degree Types Among Candidates',
+            text='Count',
+            height=500,
+            color_discrete_sequence=px.colors.qualitative.Pastel
+        )
+        fig_degree.update_traces(textposition='outside')
+        fig_degree.update_layout(yaxis=dict(tickmode="linear", dtick=1))
+
+        st.plotly_chart(fig_degree)
+
+
         #---------------BAR CHART: EXPERIENCE---------------
         df['Total Experience'] = pd.to_numeric(df['Total Experience'], errors = "coerce")
         df_exp = df[['Full Name', 'Total Experience']].dropna()
-        st.plotly_chart(px.bar(df_exp, x = "Full Name", y = "Total Experience", color_continuous_scale = "blues", title = "Experience (Years) Per Candidate", labels = {'Total Experience': 'Years'}))
+        
+        st.plotly_chart(px.bar(
+            df_exp, x = "Full Name", 
+            y = "Total Experience", 
+            color = 'Total Experience',
+            color_continuous_scale = px.colors.sequential.Emrld_r,
+            title = "Experience (Years) Per Candidate", 
+            labels = {'Total Experience': 'Years'},
+        ))
+
+        
+        with leftInner:
+            # -------- PIE CHART: PREVIOUS DESIGNATIONS WITH CANDIDATE NAMES --------
+            designation_map = {}
+
+            for _, row in df.dropna(subset=['Last Designation', 'Full Name']).iterrows():
+                designation = row['Last Designation'].strip().lower()
+                name = row['Full Name']
+                if designation in designation_map:
+                    designation_map[designation].append(name)
+                else:
+                    designation_map[designation] = [name]
+
+            # Convert to DataFrame
+            designation_data = [
+                {
+                    "Last Designation": designation.title(),
+                    "Count": len(names),
+                    "Candidates": ", ".join(names)
+                }
+                for designation, names in designation_map.items()
+            ]
+
+            prev_designations_df = pd.DataFrame(designation_data).sort_values(by="Count", ascending=False).head(10)
+
+            if not prev_designations_df.empty:
+                fig = px.pie(
+                    prev_designations_df,
+                    names="Last Designation",
+                    values="Count",
+                    color = 'Last Designation',
+                    hover_data=["Candidates"],
+                    title="Candidates with Previous Designations",
+                    height=500,
+                    color_discrete_sequence = px.colors.qualitative.Pastel1, 
+                )
+                st.plotly_chart(fig)
+
+
+        with rightInner:
+            # -------- PIE CHART: PREVIOUS COMPANIES WITH CANDIDATE NAMES --------
+            company_map = {}
+
+            for _, row in df.dropna(subset=['Last Company', 'Full Name']).iterrows():
+                company = row['Last Company'].strip().lower()
+                name = row['Full Name']
+                if company in company_map:
+                    company_map[company].append(name)
+                else:
+                    company_map[company] = [name]
+
+            # Convert to DataFrame
+            company_data = [
+                {
+                    "Last Company": company.title(),
+                    "Count": len(names),
+                    "Candidates": ", ".join(names)
+                }
+                for company, names in company_map.items()
+            ]
+
+            prev_companies_df = pd.DataFrame(company_data).sort_values(by="Count", ascending=False).head(10)
+
+            if not prev_companies_df.empty:
+                fig = px.pie(
+                    prev_companies_df,
+                    names="Last Company",
+                    values="Count",
+                    color = "Last Company",
+                    hover_data=["Candidates"],
+                    title="Candidates with Experience in Companies",
+                    height=500,
+                    color_discrete_sequence = px.colors.qualitative.Pastel1, 
+                )
+                st.plotly_chart(fig)
+
 
 
         # ------------------ INTERACTIVE SKILLSET CHART ------------------
@@ -384,7 +522,8 @@ with center:
                     barmode="group",
                     title="Candidates with Selected Skill(s)",
                     labels={"Has Skill": "Skill Presence"},
-                    height=500
+                    height=500,
+                    color_discrete_sequence = px.colors.qualitative.Pastel1, 
                 )
 
                 # Clean up Y axis
