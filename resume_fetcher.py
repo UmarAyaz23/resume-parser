@@ -403,80 +403,78 @@ with center:
         ))
 
         
-        with leftInner:
-            # -------- PIE CHART: PREVIOUS DESIGNATIONS WITH CANDIDATE NAMES --------
-            designation_map = {}
+        # -------- PIE CHART: PREVIOUS DESIGNATIONS WITH CANDIDATE NAMES --------
+        designation_map = {}
 
-            for _, row in df.dropna(subset=['Last Designation', 'Full Name']).iterrows():
-                designation = row['Last Designation'].strip().lower()
-                name = row['Full Name']
-                if designation in designation_map:
-                    designation_map[designation].append(name)
-                else:
-                    designation_map[designation] = [name]
+        for _, row in df.dropna(subset=['Last Designation', 'Full Name']).iterrows():
+            designation = row['Last Designation'].strip().lower()
+            name = row['Full Name']
+            if designation in designation_map:
+                designation_map[designation].append(name)
+            else:
+                designation_map[designation] = [name]
 
-            # Convert to DataFrame
-            designation_data = [
-                {
-                    "Last Designation": designation.title(),
-                    "Count": len(names),
-                    "Candidates": ", ".join(names)
-                }
-                for designation, names in designation_map.items()
-            ]
+        # Convert to DataFrame
+        designation_data = [
+            {
+                "Last Designation": designation.title(),
+                "Count": len(names),
+                "Candidates": ", ".join(names)
+            }
+            for designation, names in designation_map.items()
+        ]
 
-            prev_designations_df = pd.DataFrame(designation_data).sort_values(by="Count", ascending=False).head(10)
+        prev_designations_df = pd.DataFrame(designation_data).sort_values(by="Count", ascending=False).head(10)
 
-            if not prev_designations_df.empty:
-                fig = px.pie(
-                    prev_designations_df,
-                    names="Last Designation",
-                    values="Count",
-                    color = 'Last Designation',
-                    hover_data=["Candidates"],
-                    title="Candidates with Previous Designations",
-                    height=500,
-                    color_discrete_sequence = px.colors.qualitative.Pastel1, 
-                )
-                st.plotly_chart(fig)
+        if not prev_designations_df.empty:
+            fig = px.pie(
+                prev_designations_df,
+                names="Last Designation",
+                values="Count",
+                color = 'Last Designation',
+                hover_data=["Candidates"],
+                title="Candidates with Previous Designations",
+                height=500,
+                color_discrete_sequence = px.colors.qualitative.Pastel1, 
+            )
+            st.plotly_chart(fig)
 
 
-        with rightInner:
-            # -------- PIE CHART: PREVIOUS COMPANIES WITH CANDIDATE NAMES --------
-            company_map = {}
+        # -------- PIE CHART: PREVIOUS COMPANIES WITH CANDIDATE NAMES --------
+        company_map = {}
 
-            for _, row in df.dropna(subset=['Last Company', 'Full Name']).iterrows():
-                company = row['Last Company'].strip().lower()
-                name = row['Full Name']
-                if company in company_map:
-                    company_map[company].append(name)
-                else:
-                    company_map[company] = [name]
+        for _, row in df.dropna(subset=['Last Company', 'Full Name']).iterrows():
+            company = row['Last Company'].strip().lower()
+            name = row['Full Name']
+            if company in company_map:
+                company_map[company].append(name)
+            else:
+                company_map[company] = [name]
 
-            # Convert to DataFrame
-            company_data = [
-                {
-                    "Last Company": company.title(),
-                    "Count": len(names),
-                    "Candidates": ", ".join(names)
-                }
-                for company, names in company_map.items()
-            ]
+        # Convert to DataFrame
+        company_data = [
+            {
+                "Last Company": company.title(),
+                "Count": len(names),
+                "Candidates": ", ".join(names)
+            }
+            for company, names in company_map.items()
+        ]
 
-            prev_companies_df = pd.DataFrame(company_data).sort_values(by="Count", ascending=False).head(10)
+        prev_companies_df = pd.DataFrame(company_data).sort_values(by="Count", ascending=False).head(10)
 
-            if not prev_companies_df.empty:
-                fig = px.pie(
-                    prev_companies_df,
-                    names="Last Company",
-                    values="Count",
-                    color = "Last Company",
-                    hover_data=["Candidates"],
-                    title="Candidates with Experience in Companies",
-                    height=500,
-                    color_discrete_sequence = px.colors.qualitative.Pastel1, 
-                )
-                st.plotly_chart(fig)
+        if not prev_companies_df.empty:
+            fig = px.pie(
+                prev_companies_df,
+                names="Last Company",
+                values="Count",
+                color = "Last Company",
+                hover_data=["Candidates"],
+                title="Candidates with Experience in Companies",
+                height=500,
+                color_discrete_sequence = px.colors.qualitative.Pastel1, 
+            )
+            st.plotly_chart(fig)
 
 
 
